@@ -3,6 +3,7 @@ const prestamosControllers = require('../controllers/prestamos.controllers');
 var router = express.Router();
 
 // Mostrar todas las cuentas de prestamos
+// Ya esta vinculado a la base de datos
 router.get('/', function(req, res, next) {
   prestamosControllers.mostrar()
   .then((respuesta) => {
@@ -20,6 +21,7 @@ router.get('/', function(req, res, next) {
 });
 
 // Agregar Cuenta Prestamo
+// Ya esta vinculado a la base de datos
 router.post('/', function(req, res, next) {
   prestamosControllers.crear(req.body)
   .then((respuesta) => {
@@ -37,6 +39,7 @@ router.post('/', function(req, res, next) {
 });
 
 // Editar Cuenta Prestamo
+// Ya esta vinculado a la base de datos
 router.put('/:cuenta', function(req, res, next) {
   prestamosControllers.editar(req.body, req.params.cuenta)
   .then((respuesta) => {
@@ -53,7 +56,7 @@ router.put('/:cuenta', function(req, res, next) {
   })
 });
 
-// Editar Cuenta Prestamo
+// Eliminar Cuenta Prestamo
 router.delete('/:cuenta', function(req, res, next) {
   prestamosControllers.eliminar(req.params.cuenta)
   .then((respuesta) => {

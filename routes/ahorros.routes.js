@@ -57,6 +57,7 @@ router.put('/:cuenta', function(req, res, next) {
 });
 
 // Eliminar Cuenta
+// Ya esta vinculado a la base de datos
 router.delete('/:cuenta', function(req, res, next) {
   ahorrosControllers.eliminar(req.params.cuenta)
   .then((respuesta) => {

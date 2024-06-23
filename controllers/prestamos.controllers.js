@@ -1,14 +1,17 @@
 const { busqueda } = require("../database/busqueda");
-const { cuentas_prestamos, usuarios } = require("../database/db");
+const UsuaiosModel = require('../models/usuarios.model');
+const PrestamosModel = require('../models/prestamos.model');
 const { fecha_mensual } = require("../database/fechas");
-const { v4: uuidv4 } = require('uuid');
 
 class PrestamosC {
     mostrar() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const cuentas_prestamos = await PrestamosModel.find().select(
+                    '_id balance interes tasa_interes deuda usuario fecha_pagar'
+                )
                 if (cuentas_prestamos.length === 0) {
-                    return resolve("No hay registrado ninguna cuenta de prestamos")
+                    return reject("No hay registrado ninguna cuenta de prestamos")
                 }
                 return resolve({
                     mensaje: "Peticion de mostrar las cuentas de prestamos completada",
@@ -22,9 +25,15 @@ class PrestamosC {
 
     //metodo para crear cuenta prestamos
     crear(cuenta_nueva) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let {balance, interes, usuario} = cuenta_nueva;
+                const cuentas_prestamos = await PrestamosModel.find().select(
+                    '_id balance interes tasa_interes deuda usuario fecha_pagar'
+                )
+                const usuarios = await UsuaiosModel.find().select(
+                    '_id nombre apellido usuario'
+                )
+                let { balance, interes, usuario } = cuenta_nueva;
                 if (!balance || !interes || !usuario) {
                     return reject("Revisa nuevamente el manual, te falta propiedades")
                 }
@@ -43,18 +52,20 @@ class PrestamosC {
                     return reject("No existe el usuario")
                 }
                 let nuevo = {
-                    balance: Number(balance), 
+                    balance: Number(balance),
                     interes: Number(interes),
                     deuda: Number(balance),
-                    tasa_interes: Number((((Number(interes) / 100) / 360) * Number(balance)).toFixed(2)), 
+                    tasa_interes: Number((((Number(interes) / 100) / 360) * Number(balance)).toFixed(2)),
                     usuario: usuario,
-                    id: uuidv4(),
                     fecha_pagar: fecha_mensual()
                 }
-                cuentas_prestamos.push(nuevo);
+                const cuentaCreada = await PrestamosModel.create(nuevo)
+                if (!cuentaCreada) {
+                    return reject('Hubo un error al crear la nueva cuenta de prestamos')
+                }
                 return resolve({
                     mensaje: "Se completo la peticion para agregar cuenta de prestamos",
-                    data: nuevo
+                    data: cuentaCreada
                 })
             } catch (error) {
                 reject(error)
@@ -64,25 +75,31 @@ class PrestamosC {
 
     // Peticion para editar
     editar(edicion, cuenta) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let {error, data, id} = busqueda(cuentas_prestamos, cuenta)
-                let {balance, interes, deuda} = edicion
+                const cuentaBuscada = await PrestamosModel.findOne({
+                    _id: cuenta
+                })
+                let { balance, interes, deuda } = edicion
                 if (!balance || !interes || !deuda) {
                     return reject("Revisa nuevamente el manual, te falta propiedades")
                 }
-                if (error) {
+                if (!cuentaBuscada) {
                     return reject("No existe la cuenta")
                 }
-                data.balance = Number(balance)
-                data.interes = Number(interes)
-                data.tasa_interes = Number((((Number(interes) / 100) / 360) * Number(balance)).toFixed(2))
-                data.deuda = Number(deuda)
-                cuentas_prestamos.splice(id, 1);
-                cuentas_prestamos.push(data);
+                const nuevo = {
+                    balance: Number(balance),
+                    interes: Number(interes),
+                    tasa_interes: Number((((Number(interes) / 100) / 360) * Number(balance)).toFixed(2)),
+                    deuda: Number(deuda)
+                }
+                const cuentaEditada = await PrestamosModel.updateOne({ _id: cuenta }, { $set: nuevo })
+                if (!cuentaEditada) {
+                    return reject('Hubo un error al editar la cuenta')
+                }
                 return resolve({
                     mensaje: "Peticion realizado con exito para editar la cuenta de prestamos",
-                    data: data
+                    data: cuentaBuscada
                 })
             } catch (error) {
                 reject(error)
@@ -92,16 +109,21 @@ class PrestamosC {
 
     //Eliminar Cuenta
     eliminar(cuenta) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let {error, data, id} = busqueda(cuentas_prestamos, cuenta)
-                if (error) {
+                const cuentaBuscada = await PrestamosModel.findOne({
+                    _id: cuenta
+                })
+                if (!cuentaBuscada) {
                     return reject("No existe la cuenta")
                 }
-                cuentas_prestamos.splice(id, 1);
+                const cuentaEliminada = await PrestamosModel.findByIdAndDelete(cuenta)
+                if (!cuentaEliminada) {
+                    return reject('Hubo un error al eliminar la cuenta')
+                }
                 return resolve({
                     mensaje: "Completado con exito la peticion de eliminar cuenta",
-                    data: data
+                    data: cuentaBuscada
                 })
             } catch (error) {
                 reject(error)
