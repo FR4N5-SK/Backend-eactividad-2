@@ -1,13 +1,16 @@
-const { busqueda } = require("../database/busqueda");
-const { cuentas_ahorro, usuarios } = require("../database/db");
-const { v4: uuidv4 } = require('uuid');
+const UsuaiosModel = require('../models/usuarios.model');
+const AhorrosModel = require('../models/ahorros.model');
+
 
 class AhorrosC {
     mostrar() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const cuentas_ahorro = await AhorrosModel.find().select(
+                    '_id balance interes tasa_interes usuario'
+                )
                 if (cuentas_ahorro.length === 0) {
-                    return resolve("No hay registrado ninguna cuenta de ahorro")
+                    return reject("No hay registrado ninguna cuenta de ahorro")
                 }
                 return resolve({
                     mensaje: "Peticion de mostrar cuentas de ahorro completada",
@@ -21,8 +24,14 @@ class AhorrosC {
 
     //metodo para crear cuenta ahorro
     crear(cuenta_nueva) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const cuentas_ahorro = await AhorrosModel.find().select(
+                    '_id balance interes tasa_interes usuario'
+                )
+                const usuarios = await UsuaiosModel.find().select(
+                    '_id nombre apellido usuario clave'
+                )
                 let { balance, interes, usuario } = cuenta_nueva;
                 if (!balance || !interes || !usuario) {
                     return reject("Revisa nuevamente el manuel, te falta propiedades")
@@ -45,13 +54,15 @@ class AhorrosC {
                     balance: Number(balance),
                     interes: Number(interes),
                     tasa_interes: Number((((Number(interes) / 100) / 360) * Number(balance)).toFixed(2)),
-                    usuario: usuario,
-                    id: uuidv4()
+                    usuario: usuario
                 }
-                cuentas_ahorro.push(nuevo);
+                const cuentaCreada = await AhorrosModel.create(nuevo)
+                if (!cuentaCreada) {
+                    return reject('Hubo un error al crear la nueva cuenta de ahorro')
+                }
                 return resolve({
                     mensaje: "Se completo la peticion para agregar cuenta de ahorro",
-                    data: nuevo
+                    data: cuentaCreada
                 })
             } catch (error) {
                 reject(error)
@@ -61,25 +72,30 @@ class AhorrosC {
 
     // Peticion para editar
     editar(edicion, cuenta) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let { error, data, id } = busqueda(cuentas_ahorro, cuenta)
-                console.log(data)
+                const cuentaBuscada = await AhorrosModel.findOne({
+                    _id: cuenta
+                })
                 let { balance, interes } = edicion
                 if (!balance || !interes) {
                     return reject("Revisa nuevamente el manual, te falta propiedades")
                 }
-                if (error) {
+                if (!cuentaBuscada) {
                     return reject("No existe la cuenta")
                 }
-                data.balance = Number(balance)
-                data.interes = Number(interes)
-                data.tasa_interes = Number((((Number(interes) / 100) / 360) * Number(balance)).toFixed(2))
-                cuentas_ahorro.splice(id, 1);
-                cuentas_ahorro.push(data);
+                const nuevo = {
+                    balance: Number(balance),
+                    interes: Number(interes),
+                    tasa_interes: Number((((Number(interes) / 100) / 360) * Number(balance)).toFixed(2))
+                }
+                const cuentaEditada = await AhorrosModel.updateOne({ _id: cuenta }, { $set: nuevo })
+                if (!cuentaEditada) {
+                    return reject('Hubo un error al editar la cuenta')
+                }
                 return resolve({
                     mensaje: "Peticion realizado con exito para editar la cuenta de ahorros",
-                    data: data
+                    data: cuentaBuscada
                 })
             } catch (error) {
                 reject(error)
@@ -89,16 +105,21 @@ class AhorrosC {
 
     //Eliminar Cuenta
     eliminar(cuenta) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let { error, data, id } = busqueda(cuentas_ahorro, cuenta)
-                if (error) {
+                const cuentaBuscada = await AhorrosModel.findOne({
+                    _id: cuenta
+                })
+                if (!cuentaBuscada) {
                     return reject("No existe la cuenta")
                 }
-                cuentas_ahorro.splice(id, 1);
+                const cuentaEliminada = await AhorrosModel.findByIdAndDelete(cuenta)
+                if (!cuentaEliminada) {
+                    return reject('Hubo un error al eliminar la cuenta')
+                }
                 return resolve({
                     mensaje: "Completado con exito la peticion de eliminar la cuenta de ahorro",
-                    data: data
+                    data: cuentaBuscada
                 })
             } catch (error) {
                 reject(error)

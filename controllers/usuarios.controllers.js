@@ -1,4 +1,4 @@
-const { busqueda, busqueda2 } = require("../database/busqueda");
+const { busqueda2 } = require("../database/busqueda");
 const UsuaiosModel = require('../models/usuarios.model');
 const AhorrosModel = require('../models/ahorros.model');
 const CooperativasModel = require('../models/cooperativas.model');
