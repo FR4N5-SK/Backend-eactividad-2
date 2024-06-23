@@ -1,10 +1,17 @@
 const { busqueda, busqueda2 } = require("../database/busqueda");
-const { usuarios, cuentas_ahorro, cuentas_prestamos, grupos_cooperativas, relacion_cooperativas } = require("../database/db");
+const UsuaiosModel = require('../models/usuarios.model');
+const AhorrosModel = require('../models/ahorros.model');
+const CooperativasModel = require('../models/cooperativas.model');
+const RelacionCooperativasModel = require('../models/relacion_coop.model');
+const PrestamosModel = require('../models/prestamos.model');
 
 class UsuariosC {
     mostrar() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const usuarios = await UsuaiosModel.find().select(
+                    '_id nombre apellido usuario clave'
+                )
                 if (usuarios.length === 0) {
                     return resolve("No hay registrado ningun usuario")
                 }
@@ -20,8 +27,11 @@ class UsuariosC {
 
     //metodo para crear usuarios
     crear(usuario_nuevo) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const usuarios = await UsuaiosModel.find().select(
+                    '_id nombre apellido usuario clave'
+                )
                 let { nombre, apellido, clave, usuario } = usuario_nuevo;
                 if (!nombre || !apellido || !clave || !usuario) {
                     return reject("Revisa nuevamente el manuel, te falta propiedades")
@@ -37,10 +47,13 @@ class UsuariosC {
                     clave: clave,
                     usuario: usuario
                 }
-                usuarios.push(nuevo);
+                const usuarioCreado = await UsuaiosModel.create(nuevo)
+                if (!usuarioCreado) {
+                    return reject('Hubo un error al crear el nuevo usuario')
+                }
                 return resolve({
                     mensaje: "Se completo la peticion para agregar usuario",
-                    data: nuevo
+                    data: usuarioCreado
                 })
             } catch (error) {
                 reject(error)
@@ -50,24 +63,30 @@ class UsuariosC {
 
     // Peticion para editar
     editar(edicion, usuario) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let { error, data, id } = busqueda(usuarios, usuario)
+                const usuarioBuscado = await UsuaiosModel.findOne({
+                    usuario: usuario
+                })
                 let { nombre, apellido, clave } = edicion
                 if (!nombre || !apellido || !clave) {
                     return reject("Revisa nuevamente el manual, te falta propiedades")
                 }
-                if (error) {
+                if (!usuarioBuscado) {
                     return reject("No existe el usuario")
                 }
-                data.nombre = nombre
-                data.apellido = apellido
-                data.clave = clave
-                usuarios.splice(id, 1);
-                usuarios.push(data);
+                let nuevo = {
+                    nombre: nombre,
+                    apellido: apellido,
+                    clave: clave
+                }
+                const usuarioEditado = await UsuaiosModel.updateOne({ _id: usuarioBuscado._id }, { $set: nuevo })
+                if (!usuarioEditado) {
+                    return reject('Hubo un error al editar el usuario')
+                }
                 return resolve({
                     mensaje: "Peticion realizado con exito para editar usuario",
-                    data: data
+                    data: usuarioBuscado
                 })
             } catch (error) {
                 reject(error)
@@ -162,22 +181,31 @@ class UsuariosC {
 
     //Eliminar usuario
     eliminar(usuario) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let { error, data, id } = busqueda(usuarios, usuario)
-                let ahorro = busqueda(cuentas_ahorro, usuario)
-                let prestamos = busqueda(cuentas_prestamos, usuario)
-                let cooperativas = busqueda(relacion_cooperativas, usuario)
-                if (error) {
+                const usuarioBuscado = await UsuaiosModel.findOne({usuario: usuario})
+                const ahorroBuscado = await AhorrosModel.findOne({usuario: usuario})
+                const prestamoBuscado = await PrestamosModel.findOne({usuario: usuario})
+                const cooperativaBuscado = await RelacionCooperativasModel.find({usuario: usuario})
+                if (!usuarioBuscado) {
                     return reject("No existe el usuario")
                 }
-                cuentas_ahorro.splice(ahorro.id, 1);
-                cuentas_prestamos.splice(prestamos.id, 1);
-                relacion_cooperativas.splice(cooperativas.id, 1);
-                usuarios.splice(id, 1);
+                if (ahorroBuscado) {
+                    await AhorrosModel.findByIdAndDelete(ahorroBuscado._id)
+                }
+                if (prestamoBuscado) {
+                    await PrestamosModel.findByIdAndDelete(prestamoBuscado._id)
+                }
+                if (cooperativaBuscado.length > 0) {
+                    await CooperativasModel.deleteMany({usuario: cooperativaBuscado._id})
+                }
+                const usuarioEliminado = await UsuaiosModel.findByIdAndDelete(usuarioBuscado._id)
+                if (!usuarioEliminado) {
+                    return reject('Hubo un error al eliminar el Usuario')
+                }
                 return resolve({
                     mensaje: "Completado con exito la peticion de eliminar el usuario",
-                    data: data
+                    data: usuario
                 })
             } catch (error) {
                 reject(error)

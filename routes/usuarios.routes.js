@@ -3,6 +3,7 @@ const usuariosControllers = require('../controllers/usuarios.controllers');
 var router = express.Router();
 
 // Mostrar todos los usuarios
+// Ya esta vinculado a la base de datos
 router.get('/', function(req, res, next) {
   usuariosControllers.mostrar()
   .then((respuesta) => {
@@ -20,6 +21,7 @@ router.get('/', function(req, res, next) {
 });
 
 // Agregar Usuario
+// Ya esta vinculado a la base de datos
 router.post('/', function(req, res, next) {
   usuariosControllers.crear(req.body)
   .then((respuesta) => {
@@ -37,6 +39,7 @@ router.post('/', function(req, res, next) {
 });
 
 // Editar Usuario
+// Ya esta vinculado a la base de datos
 router.put('/:usuario', function(req, res, next) {
   usuariosControllers.editar(req.body, req.params.usuario)
   .then((respuesta) => {
@@ -88,6 +91,7 @@ router.get('/resumen', function(req, res, next) {
 });
 
 // Eliminar Usuario
+// Ya esta vinculado a la base de datos (Faltan probar propiedades)
 router.delete('/:usuario', function(req, res, next) {
   usuariosControllers.eliminar(req.params.usuario)
   .then((respuesta) => {
