@@ -57,6 +57,7 @@ router.put('/:usuario', function(req, res, next) {
 });
 
 // Mostrar las cuentas del usuario
+// Ya esta vinculado a la base de datos
 router.get('/cuentas/:usuario', function(req, res, next) {
   usuariosControllers.cuentas(req.params.usuario)
   .then((respuesta) => {
@@ -74,6 +75,7 @@ router.get('/cuentas/:usuario', function(req, res, next) {
 });
 
 // Mostrar resumen de todo el banco por tipos de cuentas
+// Ya esta vinculado a la base de datos
 router.get('/resumen', function(req, res, next) {
   usuariosControllers.resumen()
   .then((respuesta) => {

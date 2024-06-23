@@ -95,11 +95,23 @@ class UsuariosC {
     }
 
     cuentas(usuario) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let ahorros = busqueda2(cuentas_ahorro, usuario)
-                let prestamos = busqueda2(cuentas_prestamos, usuario)
-                let cooperativas = busqueda2(relacion_cooperativas, usuario)
+                let ahorros = await AhorrosModel.find({
+                    usuario: usuario
+                }).select(
+                    '_id balance interes tasa_interes usuario'
+                )
+                let prestamos = await PrestamosModel.find({
+                    usuario: usuario
+                }).select(
+                    '_id balance interes tasa_interes deuda usuario fecha_pagar'
+                )
+                let cooperativas = await RelacionCooperativasModel.find({
+                    usuario: usuario
+                }).select(
+                    '_id grupo_cooperativa usuario cuotas_pagadas'
+                )
                 if (ahorros.length === 0) {
                     ahorros = "El usuario no tiene cuenta de ahorro"
                 }
@@ -125,8 +137,17 @@ class UsuariosC {
     }
 
     resumen() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const cuentas_ahorro = await AhorrosModel.find().select(
+                    '_id balance interes tasa_interes usuario'
+                )
+                const grupos_cooperativas = await CooperativasModel.find().select(
+                    '_id balance pago_cuotas cuotas_totales dias_entre_cuotas fechas'
+                )
+                const cuentas_prestamos = await PrestamosModel.find().select(
+                    '_id balance interes tasa_interes deuda usuario fecha_pagar'
+                )
                 let balance_aho = 0
                 let interes_aho = 0
                 let balance_pre = 0
@@ -162,7 +183,7 @@ class UsuariosC {
                     interes_pre = interes_pre + cuentas_prestamos[i].interes
                     promedio = promedio + 1
                 }
-                resumen.prestamos.balance_total = balance_aho;
+                resumen.prestamos.balance_total = balance_pre;
                 resumen.prestamos.interes_promedio = interes_pre;
                 resumen.prestamos.tasa_promedio = Number(((resumen.prestamos.interes_promedio / 100) / 360) * balance_pre).toFixed(2);
                 for (let i = 0; i < grupos_cooperativas.length; i++) {
@@ -183,10 +204,10 @@ class UsuariosC {
     eliminar(usuario) {
         return new Promise(async (resolve, reject) => {
             try {
-                const usuarioBuscado = await UsuaiosModel.findOne({usuario: usuario})
-                const ahorroBuscado = await AhorrosModel.findOne({usuario: usuario})
-                const prestamoBuscado = await PrestamosModel.findOne({usuario: usuario})
-                const cooperativaBuscado = await RelacionCooperativasModel.find({usuario: usuario})
+                const usuarioBuscado = await UsuaiosModel.findOne({ usuario: usuario })
+                const ahorroBuscado = await AhorrosModel.findOne({ usuario: usuario })
+                const prestamoBuscado = await PrestamosModel.findOne({ usuario: usuario })
+                const cooperativaBuscado = await RelacionCooperativasModel.find({ usuario: usuario })
                 if (!usuarioBuscado) {
                     return reject("No existe el usuario")
                 }
@@ -197,7 +218,7 @@ class UsuariosC {
                     await PrestamosModel.findByIdAndDelete(prestamoBuscado._id)
                 }
                 if (cooperativaBuscado.length > 0) {
-                    await RelacionCooperativasModel.deleteMany({usuario: usuario})
+                    await RelacionCooperativasModel.deleteMany({ usuario: usuario })
                 }
                 const usuarioEliminado = await UsuaiosModel.findByIdAndDelete(usuarioBuscado._id)
                 if (!usuarioEliminado) {
