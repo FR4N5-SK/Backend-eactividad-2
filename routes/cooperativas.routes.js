@@ -57,6 +57,7 @@ router.put('/:cuenta', function(req, res, next) {
 });
 
 // Agregar Usuario a Grupo de Cooperativa
+// Ya esta vinculado a la base de datos
 router.post('/:usuario/:cooperativa', function(req, res, next) {
   cooperativasControllers.relacionar(req.params.usuario, req.params.cooperativa)
   .then((respuesta) => {
@@ -74,6 +75,7 @@ router.post('/:usuario/:cooperativa', function(req, res, next) {
 });
 
 // Mostrar proxima fecha de pago de una cooperativa
+// Ya esta vinculado a la base de datos
 router.get('/:cuenta', function(req, res, next) {
   cooperativasControllers.proxima(req.params.cuenta)
   .then((respuesta) => {
@@ -91,6 +93,7 @@ router.get('/:cuenta', function(req, res, next) {
 });
 
 // Eliminar relacion de usuario con cooperativa
+// Ya esta vinculado a la base de datos
 router.delete('/eliminar-relacion/:usuario/:cooperativa', function(req, res, next) {
   cooperativasControllers.eliminarRelacion(req.params.usuario, req.params.cooperativa)
   .then((respuesta) => {

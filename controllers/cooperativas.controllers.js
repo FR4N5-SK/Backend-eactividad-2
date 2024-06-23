@@ -1,6 +1,6 @@
-const { usuarios, relacion_cooperativas } = require("../database/db");
 const CooperativasModel = require('../models/cooperativas.model');
 const RelacionesCooperativasModel = require('../models/relacion_coop.model');
+const UsuaiosModel = require('../models/usuarios.model');
 const { programacion_fechas, hoy } = require("../database/fechas");
 const { busqueda } = require("../database/busqueda");
 
@@ -88,14 +88,20 @@ class CooperativasC {
     }
 
     relacionar(usuario, cooperativa) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let res_usuario = busqueda(usuarios, usuario)
-                let res_cooperativa = busqueda(grupos_cooperativas, cooperativa)
-                if (res_usuario.error) {
+                const usuarioBuscado = await UsuaiosModel.findOne({ usuario: usuario })
+                const relacionBuscada = await RelacionesCooperativasModel.findOne({ usuario: usuario, grupo_cooperativa: cooperativa })
+                const cuentaBuscada = await CooperativasModel.findOne({
+                    _id: cooperativa
+                })
+                if (relacionBuscada) {
+                    return reject("Ya el usuario esta vinculado a esta cooperativa")
+                }
+                if (!usuarioBuscado) {
                     return reject("No existe el usuario")
                 }
-                if (res_cooperativa.error) {
+                if (!cuentaBuscada) {
                     return reject("No existe la cooperativa")
                 }
                 let relacion = {
@@ -103,10 +109,13 @@ class CooperativasC {
                     grupo_cooperativa: cooperativa,
                     cuotas_pagadas: 0
                 }
-                relacion_cooperativas.push(relacion)
+                const relacionCreada = await RelacionesCooperativasModel.create(relacion)
+                if (!relacionCreada) {
+                    return reject('Hubo un error al crear la nueva relacion de usuario a una cooperativa')
+                }
                 return resolve({
                     mensaje: "Se completo con exito la peticion de relacionar cooperativa con usuario",
-                    data: relacion
+                    data: relacionCreada
                 })
             } catch (error) {
                 reject(error)
@@ -115,17 +124,19 @@ class CooperativasC {
     }
 
     proxima(cuenta) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
                 let fecha_hoy = hoy()
                 let fecha_proxima = "Ya pasaron todas las fechas de pago de la cooperativa"
-                let { error, data } = busqueda(grupos_cooperativas, cuenta)
-                if (error) {
+                const cuentaBuscada = await CooperativasModel.findOne({
+                    _id: cuenta
+                })
+                if (!cuentaBuscada) {
                     return reject("No existe la cooperativa")
                 }
-                for (let i = 0; i < data.fechas.length; i++) {
-                    if (data.fechas[i] >= fecha_hoy) {
-                        fecha_proxima = data.fechas[i]
+                for (let i = 0; i < cuentaBuscada.fechas.length; i++) {
+                    if (cuentaBuscada.fechas[i] >= fecha_hoy) {
+                        fecha_proxima = cuentaBuscada.fechas[i]
                         return resolve({
                             mensaje: "Se completo con exito la peticion de listar la proxima fecha de pago",
                             data: fecha_proxima
@@ -143,11 +154,17 @@ class CooperativasC {
     }
 
     eliminarRelacion(usuario, cooperativa) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const relacion_cooperativas = await RelacionesCooperativasModel.find().select(
+                    '_id usuario grupo_cooperativa cuotas_pagadas'
+                )
                 for (let i = 0; i < relacion_cooperativas.length; i++) {
                     if (relacion_cooperativas[i].usuario === usuario && relacion_cooperativas[i].grupo_cooperativa === cooperativa) {
-                        relacion_cooperativas.splice(i, 1);
+                        const relacionEliminada = await RelacionesCooperativasModel.findByIdAndDelete(relacion_cooperativas[i]._id)
+                        if (!relacionEliminada) {
+                            return reject('Hubo un error al eliminar la relacion del usuario a la cooperativa')
+                        }
                         return resolve({
                             mensaje: "Completada con exito la peticion de eliminar usuario de una cooperativa",
                             data: {
@@ -178,7 +195,7 @@ class CooperativasC {
                     return reject("No existe el grupo de cooperativa")
                 }
                 if (relacionesBuscada.length > 0) {
-                    await RelacionesCooperativasModel.deleteMany({grupo_cooperativa: cuentaBuscada._id})
+                    await RelacionesCooperativasModel.deleteMany({ grupo_cooperativa: cuentaBuscada._id })
                 }
                 const cuentaEliminada = await CooperativasModel.findByIdAndDelete(cuenta)
                 if (!cuentaEliminada) {
