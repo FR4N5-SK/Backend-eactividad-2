@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANCO</title>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.0-beta2/css/bootstrap.min.css"
+        integrity="sha512-aqT9YD5gLuLBr6ipQAS+72o5yHKzgZbGxEh6iY8lW/r6gG14e2kBTAJb8XrxzZrMOgSmDqtLaF76T0Z6YY2IHg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .tarjeta:hover {
+            background-color: #212529 !important;
+            transition: all;
+            transition-duration: .3s;
+            cursor: pointer;
+        }
+
+        .tarjeta:hover .card-body .text-dark {
+            color: #FFC107 !important;
+            transition: all;
+            transition-duration: .3s;
+        }
+
+        .tarjeta {
+            transition: all;
+            transition-duration: .3s;
+        }
+
+        .tarjeta .card-body .text-dark {
+            transition: all;
+            transition-duration: .3s;
+        }
+    </style>
+</head>
+
+<body class="bg-dark body">
+    <h1 class="text-white"
+        style="margin-bottom: 0 ;height: 10vh; display: flex; align-items: center; justify-content: center">
+        Banco 100% UVM
+    </h1>
+    <div class="container" style="height: 90vh;">
+        <div class="row" style="height: 90vh; width: 100%; display: flex; align-items: center; justify-content: center">
+            <div class="col text-white" style="display: flex; align-items: center; justify-content: center">
+                <a href="http://localhost:3000/mostrar/ahorros" class="card tarjeta" style="width: 500px; height: 50vh; text-decoration: none;">
+                    <img src="https://e00-elmundo.uecdn.es/assets/multimedia/imagenes/2023/08/21/16926155744745.jpg"
+                        style="height: 75%;" class="Imagen de Ahorros" alt="...">
+                    <div class="card-body">
+                        <h3 class="card-text text-dark text-center">Ingresar a las Cuentas de Ahorros</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col text-white" style="display: flex; align-items: center; justify-content: center">
+                <a href="http://localhost:3000/mostrar/prestamos" class="card tarjeta" style="width: 500px; height: 50vh; text-decoration: none;">
+                    <img src="https://diarioelregionaldelzulia.com/wp-content/uploads/2023/08/Prestamos-dia-de-pago.jpg"
+                        style="height: 75%;" class="Imagen de Prestamos" alt="...">
+                    <div class="card-body">
+                        <h3 class="card-text text-dark text-center">Ingresar a las Cuentas de Prestamos</h3>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+        integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</body>
+
+</html>
