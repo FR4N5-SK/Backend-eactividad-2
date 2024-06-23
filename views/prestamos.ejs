@@ -66,13 +66,13 @@
                             <a href="http://localhost:3000/mostrar/prestamos-eliminar/<%= row._id %>"><i
                                     class="fa-solid fa-trash text-danger"> Eliminar</i></a>
                             <button style="background-color: transparent; border: none;" data-bs-toggle="modal"
-                                data-bs-target="#editar"><i class="fa-solid fa-pen-to-square text-success">
+                                data-bs-target="#editar<%= row.index %>"><i class="fa-solid fa-pen-to-square text-success">
                                     Editar</i></button>
                         </div>
                     </div>
                 </div>
                 <!-- Modal Editar -->
-                <div class="modal fade text-dark" id="editar" tabindex="-1" aria-labelledby="editar" aria-hidden="true">
+                <div class="modal fade text-dark" id="editar<%= row.index %>" tabindex="-1" aria-labelledby="editar" aria-hidden="true">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
