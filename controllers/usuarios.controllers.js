@@ -197,7 +197,7 @@ class UsuariosC {
                     await PrestamosModel.findByIdAndDelete(prestamoBuscado._id)
                 }
                 if (cooperativaBuscado.length > 0) {
-                    await CooperativasModel.deleteMany({usuario: cooperativaBuscado._id})
+                    await RelacionCooperativasModel.deleteMany({usuario: usuario})
                 }
                 const usuarioEliminado = await UsuaiosModel.findByIdAndDelete(usuarioBuscado._id)
                 if (!usuarioEliminado) {

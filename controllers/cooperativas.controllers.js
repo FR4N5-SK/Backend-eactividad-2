@@ -1,14 +1,18 @@
-const { grupos_cooperativas, usuarios, relacion_cooperativas } = require("../database/db");
-const { v4: uuidv4 } = require('uuid');
+const { usuarios, relacion_cooperativas } = require("../database/db");
+const CooperativasModel = require('../models/cooperativas.model');
+const RelacionesCooperativasModel = require('../models/relacion_coop.model');
 const { programacion_fechas, hoy } = require("../database/fechas");
 const { busqueda } = require("../database/busqueda");
 
 class CooperativasC {
     mostrar() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                const grupos_cooperativas = await CooperativasModel.find().select(
+                    '_id balance pago_cuotas cuotas_totales dias_entre_cuotas fechas'
+                )
                 if (grupos_cooperativas.length === 0) {
-                    return resolve("No hay registrado ningun grupo de cooperativa")
+                    return reject("No hay registrado ningun grupo de cooperativa")
                 }
                 return resolve({
                     mensaje: "Peticion de mostrar los grupos de cooperativas completada",
@@ -22,7 +26,7 @@ class CooperativasC {
 
     //metodo para crear grupos de cooperativa
     crear(cuenta_nueva) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
                 let { pago_cuotas, cuotas_totales, dias_entre_cuotas, fecha_iniciar } = cuenta_nueva;
                 if (!pago_cuotas || !cuotas_totales || !dias_entre_cuotas || !fecha_iniciar) {
@@ -33,13 +37,15 @@ class CooperativasC {
                     pago_cuotas: Number(pago_cuotas),
                     cuotas_totales: Number(cuotas_totales),
                     dias_entre_cuotas: Number(dias_entre_cuotas),
-                    id: uuidv4(),
                     fechas: programacion_fechas(fecha_iniciar, Number(dias_entre_cuotas), Number(cuotas_totales))
                 }
-                grupos_cooperativas.push(nuevo);
+                const cuentaCreada = await CooperativasModel.create(nuevo)
+                if (!cuentaCreada) {
+                    return reject('Hubo un error al crear lel nuevo grupo de cooperativa')
+                }
                 return resolve({
                     mensaje: "Se completo la peticion para agregar grupo de cooperativa",
-                    data: nuevo
+                    data: cuentaCreada
                 })
             } catch (error) {
                 reject(error)
@@ -49,26 +55,31 @@ class CooperativasC {
 
     // Peticion para editar
     editar(edicion, cuenta) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let { error, data, id } = busqueda(grupos_cooperativas, cuenta)
-                console.log(data)
+                const cuentaBuscada = await CooperativasModel.findOne({
+                    _id: cuenta
+                })
                 let { balance, pago_cuotas, cuotas_totales } = edicion
                 if (!balance || !pago_cuotas || !cuotas_totales) {
                     return reject("Revisa nuevamente el manual, te falta propiedades")
                 }
-                if (error) {
+                if (!cuentaBuscada) {
                     return reject("No existe la cooperativa")
                 }
-                data.balance = Number(balance)
-                data.pago_cuotas = Number(pago_cuotas)
-                data.cuotas_totales = Number(cuotas_totales)
-                data.fechas = programacion_fechas(data.fechas[0], Number(data.dias_entre_cuotas), Number(cuotas_totales))
-                grupos_cooperativas.splice(id, 1);
-                grupos_cooperativas.push(data);
+                const nuevo = {
+                    balance: Number(balance),
+                    pago_cuotas: Number(pago_cuotas),
+                    cuotas_totales: Number(cuotas_totales),
+                    fechas: programacion_fechas(cuentaBuscada.fechas[0], Number(cuentaBuscada.dias_entre_cuotas), Number(cuotas_totales))
+                }
+                const cuentaEditada = await CooperativasModel.updateOne({ _id: cuenta }, { $set: nuevo })
+                if (!cuentaEditada) {
+                    return reject('Hubo un error al editar la cuenta')
+                }
                 return resolve({
                     mensaje: "Peticion realizado con exito para editar el grupo de cooperativa",
-                    data: data
+                    data: cuentaBuscada
                 })
             } catch (error) {
                 reject(error)
@@ -155,16 +166,27 @@ class CooperativasC {
 
     //Eliminar Cuenta
     eliminar(cuenta) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
-                let { error, data, id } = busqueda(grupos_cooperativas, cuenta)
-                if (error) {
+                const cuentaBuscada = await CooperativasModel.findOne({
+                    _id: cuenta
+                })
+                const relacionesBuscada = await RelacionesCooperativasModel.find().select(
+                    '_id grupo_cooperativa'
+                )
+                if (!cuentaBuscada) {
                     return reject("No existe el grupo de cooperativa")
                 }
-                grupos_cooperativas.splice(id, 1);
+                if (relacionesBuscada.length > 0) {
+                    await RelacionesCooperativasModel.deleteMany({grupo_cooperativa: cuentaBuscada._id})
+                }
+                const cuentaEliminada = await CooperativasModel.findByIdAndDelete(cuenta)
+                if (!cuentaEliminada) {
+                    return reject('Hubo un error al eliminar la cuenta')
+                }
                 return resolve({
                     mensaje: "Completado con exito la peticion de eliminar el grupo",
-                    data: data
+                    data: cuentaBuscada
                 })
             } catch (error) {
                 reject(error)

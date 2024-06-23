@@ -3,6 +3,7 @@ const cooperativasControllers = require('../controllers/cooperativas.controllers
 var router = express.Router();
 
 // Mostrar todos los grupos de cooperativas
+// Ya esta vinculado a la base de datos
 router.get('/', function(req, res, next) {
   cooperativasControllers.mostrar()
   .then((respuesta) => {
@@ -20,6 +21,7 @@ router.get('/', function(req, res, next) {
 });
 
 // Agregar Grupo de Cooperativa
+// Ya esta vinculado a la base de datos
 router.post('/', function(req, res, next) {
   cooperativasControllers.crear(req.body)
   .then((respuesta) => {
@@ -37,6 +39,7 @@ router.post('/', function(req, res, next) {
 });
 
 // Editar Grupos Cooperativas
+// Ya esta vinculado a la base de datos
 router.put('/:cuenta', function(req, res, next) {
   cooperativasControllers.editar(req.body, req.params.cuenta)
   .then((respuesta) => {
@@ -53,7 +56,7 @@ router.put('/:cuenta', function(req, res, next) {
   })
 });
 
-// Agregar Grupo de Cooperativa
+// Agregar Usuario a Grupo de Cooperativa
 router.post('/:usuario/:cooperativa', function(req, res, next) {
   cooperativasControllers.relacionar(req.params.usuario, req.params.cooperativa)
   .then((respuesta) => {
@@ -105,6 +108,7 @@ router.delete('/eliminar-relacion/:usuario/:cooperativa', function(req, res, nex
 });
 
 // Eliminar Grupo de Cooperativa
+// Ya esta vinculado a la base de datos
 router.delete('/:grupo', function(req, res, next) {
   cooperativasControllers.eliminar(req.params.grupo)
   .then((respuesta) => {
